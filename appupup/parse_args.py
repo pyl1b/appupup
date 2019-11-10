@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Code related to parsing program arguments.
 """
 from __future__ import unicode_literals
 from __future__ import print_function
@@ -9,7 +8,7 @@ import logging
 import argparse
 import os
 
-from appdirs import user_log_dir
+from appdirs import user_log_dir, user_data_dir
 
 from appupup.configure import get_config_file
 
@@ -24,8 +23,9 @@ def make_argument_parser(app_author, app_name, app_description, app_url,
 
     Examples:
 
-        >>> make_argument_parser(__author__, __package_name__, "description",
-        ...     parser_constructor=None)
+        >>> make_argument_parser(
+        ...     __author__, __package_name__, __package_url__,
+        ...     "description", parser_constructor=None)
 
     Arguments:
         app_author:
@@ -38,11 +38,16 @@ def make_argument_parser(app_author, app_name, app_description, app_url,
             A callable that receives the parser for further construction.
     """
 
+    udd = user_data_dir(app_name, app_author)
+
     parser = argparse.ArgumentParser(
-        description=app_description,
-        epilog = "See %s for more information." % app_url,
+        description='ko server.',
+        epilog="See %s for more information" % app_url,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
+    parser = argparse.ArgumentParser(
+        description=app_description)
     parser.add_argument(
         '--config', default=get_config_file(app_name, app_author),
         metavar='file', dest='config_file',
@@ -66,6 +71,21 @@ def make_argument_parser(app_author, app_name, app_description, app_url,
         "--version", default=False,
         action="store_true",
         help="print program version and exit")
+    parser.add_argument(
+        "--hookup", default=False,
+        action="store_true",
+        help="loads the hook file (default one or specified in hook-file "
+             "argument")
+    parser.add_argument(
+        '--hook-file',
+        metavar="file", action='store',
+        default=None,
+        help='hook file; if not provided a file with the name overrides.py '
+             'will be searched for')
+    parser.add_argument(
+        '--udd',
+        action='store', default=udd,
+        help='User data directory.')
 
     if parser_constructor is not None:
         parser_constructor(parser)
