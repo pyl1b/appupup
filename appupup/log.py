@@ -9,6 +9,13 @@ import os
 import re
 
 
+# In python 3.7 the MatchObject was introduced.
+try:
+    pattern_object = re.Pattern
+except AttributeError:
+    from _sre import SRE_Pattern as pattern_object
+
+
 def setup_logging(args, app_name, app_version, app_stage=''):
     """
     Prepares our logging mechanism.
@@ -120,7 +127,7 @@ class DebugLogger(logging.StreamHandler):
         """ Checks if a value matches the pattern. """
         if pattern is None:
             return True
-        elif isinstance(pattern, re.Pattern):
+        elif isinstance(pattern, pattern_object):
             return pattern.match(str(value))
         else:
             return str(pattern) == str(value)
