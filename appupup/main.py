@@ -45,9 +45,37 @@ def overrides_file(base_package, args):
 
 
 def main(app_name, app_version, app_stage, app_author, app_description,
-         app_url, parser_constructor=None, base_package=None):
+         app_url, parser_constructor=None, pre_hook=None, base_package=None):
     """
     Entry point for the application.
+
+    Arguments:
+        app_name (str):
+            The name of the application.
+        app_version (str):
+            The version of the application (x.y.z).
+        app_stage (str):
+            Application stage.
+        app_author (str):
+            The name of the author.
+        app_description (str):
+            A description to use with the parser.
+        app_url (str):
+            Application url. Will be part of the epilog.
+        parser_constructor (func):
+            Optional constructor that can add parser options.
+        pre_hook (func):
+            Function executed before the function decided by the
+            arguments is executed.
+        base_package (str):
+            The name of the package. Can be used to detect the location of the
+            overrides file when the user does not provide one. By default
+            this is the same as app_name.
+
+    Returns:
+        * 0 for normal exit
+        * 1 for exit with error
+        * -2 if an unhandled exception was triggered by the main function.
     """
     random.seed(datetime.now())
 
@@ -97,7 +125,10 @@ def main(app_name, app_version, app_stage, app_author, app_description,
     else:
         logger.debug("No hook file was loaded")
 
-# noinspection PyBroadException
+    if pre_hook:
+        pre_hook(args)
+
+    # noinspection PyBroadException
     try:
         result = func(args, logger) if func is not None else 0
         if not isinstance(result, int):
