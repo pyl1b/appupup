@@ -49,6 +49,17 @@ def main(app_name, app_version, app_stage, app_author, app_description,
     """
     Entry point for the application.
 
+    Example:
+
+        >>> if __name__ == '__main__':
+        >>>     import sys
+        >>>     sys.exit(main(
+        ...          app_name=__package_name__, app_version=__version__,
+        ...          app_stage='',
+        ...          app_author=__author__, app_description='something.',
+        ...          app_url=__package_url__,
+        ...          parser_constructor=create_subparsers))
+
     Arguments:
         app_name (str):
             The name of the application.
