@@ -11,8 +11,9 @@ import re
 
 # In python 3.7 the MatchObject was introduced.
 try:
-    pattern_object = re.Pattern
+    is_pattern_object = lambda x: isinstance(x, re.Pattern)
 except AttributeError:
+    is_pattern_object = lambda x: type(x).__name__ == 'SRE_Pattern'
     from _sre import SRE_Pattern as pattern_object
 
 
@@ -127,7 +128,7 @@ class DebugLogger(logging.StreamHandler):
         """ Checks if a value matches the pattern. """
         if pattern is None:
             return True
-        elif isinstance(pattern, pattern_object):
+        elif is_pattern_object(pattern):
             return pattern.match(str(value))
         else:
             return str(pattern) == str(value)
