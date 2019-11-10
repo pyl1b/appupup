@@ -34,7 +34,7 @@ def overrides_file(base_package, args):
             break
 
         result = os.path.abspath(
-            os.path.join(os.pardir.base_package, 'overrides.py'))
+            os.path.join(os.pardir, base_package, 'overrides.py'))
         if os.path.exists(result):
             break
 
@@ -50,15 +50,25 @@ def main(app_name, app_version, app_stage, app_author, app_description,
     Entry point for the application.
 
     Example:
-
+        >>> def print_version(args, logger):
+        >>>     print("%s version %s" % (__package_name__, __version__))
+        >>>
+        >>>
+        >>> def setup_parser(parent_parser):
+        >>>     subparsers = parent_parser.add_subparsers(help='top level command')
+        >>>     parser = subparsers.add_parser(
+        >>>         'version', help='Prints the version and exits')
+        >>>     parser.set_defaults(func=print_version)
+        >>>
+        >>>
         >>> if __name__ == '__main__':
         >>>     import sys
         >>>     sys.exit(main(
-        ...          app_name=__package_name__, app_version=__version__,
-        ...          app_stage='',
-        ...          app_author=__author__, app_description='something.',
-        ...          app_url=__package_url__,
-        ...          parser_constructor=create_subparsers))
+        >>>          app_name=__package_name__, app_version=__version__,
+        >>>          app_stage='',
+        >>>          app_author=__author__, app_description='something.',
+        >>>          app_url=__package_url__,
+        >>>          parser_constructor=setup_parser))
 
     Arguments:
         app_name (str):
