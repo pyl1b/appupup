@@ -11,8 +11,11 @@ import re
 
 # The Pattern was introduced in python 3.7
 try:
+    _ = re.Pattern
+
     def is_pattern_object(x):
         return isinstance(x, re.Pattern)
+
 except AttributeError:
     def is_pattern_object(x):
         return type(x).__name__ == 'SRE_Pattern'
