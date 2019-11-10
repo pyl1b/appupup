@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """
+Functionality that combines arguments and configuration files.
 """
 from __future__ import unicode_literals
 from __future__ import print_function
