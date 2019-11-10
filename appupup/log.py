@@ -9,12 +9,13 @@ import os
 import re
 
 
-# In python 3.7 the MatchObject was introduced.
+# The Pattern was introduced in python 3.7
 try:
-    is_pattern_object = lambda x: isinstance(x, re.Pattern)
+    def is_pattern_object(x):
+        return isinstance(x, re.Pattern)
 except AttributeError:
-    is_pattern_object = lambda x: type(x).__name__ == 'SRE_Pattern'
-    from _sre import SRE_Pattern as pattern_object
+    def is_pattern_object(x):
+        return type(x).__name__ == 'SRE_Pattern'
 
 
 def setup_logging(args, app_name, app_version, app_stage=''):
