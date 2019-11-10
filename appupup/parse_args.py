@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Functionality that combines arguments and configuration files.
+Code related to parsing program arguments.
 """
 from __future__ import unicode_literals
 from __future__ import print_function
@@ -9,7 +9,7 @@ import logging
 import argparse
 import os
 
-from appdirs import user_log_dir, user_data_dir
+from appdirs import user_log_dir
 
 from appupup.configure import get_config_file
 
@@ -22,14 +22,10 @@ def make_argument_parser(app_author, app_name, app_description, app_url,
     Creates an ArgumentParser to read the options for this script from
     sys.argv.
 
-    Most of the times the user will want to provide a function that
-    continues the construction of the parser.
-
     Examples:
 
-        >>> make_argument_parser(
-        ...     __author__, __package_name__, __package_url__,
-        ...     "description", parser_constructor=None)
+        >>> make_argument_parser(__author__, __package_name__, "description",
+        ...     parser_constructor=None)
 
     Arguments:
         app_author:
@@ -42,12 +38,11 @@ def make_argument_parser(app_author, app_name, app_description, app_url,
             A callable that receives the parser for further construction.
     """
 
-    udd = user_data_dir(app_name, app_author)
-
     parser = argparse.ArgumentParser(
         description=app_description,
         epilog = "See %s for more information." % app_url,
     )
+
     parser.add_argument(
         '--config', default=get_config_file(app_name, app_author),
         metavar='file', dest='config_file',
@@ -71,10 +66,6 @@ def make_argument_parser(app_author, app_name, app_description, app_url,
         "--version", default=False,
         action="store_true",
         help="print program version and exit")
-    parser.add_argument(
-        '--udd',
-        action='store', default=udd,
-        help='User data directory.')
 
     if parser_constructor is not None:
         parser_constructor(parser)
