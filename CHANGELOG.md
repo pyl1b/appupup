@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2019-11-15
+### Changed
+- main now accepts optional arguments passes to function
+
 ## [0.2.1] - 2019-11-10
 ### Fixed
 - python 3.6 tests were failing in 0.2.0
