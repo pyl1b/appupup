@@ -141,14 +141,14 @@ def main(app_name, app_version, app_stage, app_author, app_description,
         hook = importlib.util.module_from_spec(spec)
         try:
             spec.loader.exec_module(hook)
-            hook.init(arguments)
+            hook.init(arguments, *args, **kwargs)
         except ImportError:
             pass
     else:
         logger.debug("No hook file was loaded")
 
     if pre_hook:
-        pre_hook(arguments)
+        pre_hook(arguments, *args, **kwargs)
 
     # noinspection PyBroadException
     try:

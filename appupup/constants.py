@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 """
-import logging
-
 __author__ = "Nicu Tofan"
 __package_name__ = "appupup"
 __copyright__ = "Copyright 2019, Nicu Tofan"

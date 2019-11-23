@@ -87,8 +87,8 @@ def setup_logging(args, app_name, app_version, app_stage=''):
         logger.addHandler(file_handler)
 
     logger.setLevel(log_level)
-    logger.info(
-        "%s v%s %s STARTED", app_name, app_version, app_stage)
+    logger.debug(
+        "%s v%s %s started", app_name, app_version, app_stage)
     logger.debug("logging to %s", args.log_file)
     return True
 
