@@ -46,7 +46,7 @@ def overrides_file(base_package, args):
 
 def main(app_name, app_version, app_stage, app_author, app_description,
          app_url, parser_constructor=None, pre_hook=None, base_package=None,
-         *args, **kwargs):
+         log_for_console=False, *args, **kwargs):
     """
     Entry point for the application.
 
@@ -93,6 +93,9 @@ def main(app_name, app_version, app_stage, app_author, app_description,
             The name of the package. Can be used to detect the location of the
             overrides file when the user does not provide one. By default
             this is the same as app_name.
+        log_for_console (bool):
+            Use a shorter format for console output; useful when the INFO
+            level is intended for the user.
 
     Returns:
         * 0 for normal exit
@@ -121,7 +124,9 @@ def main(app_name, app_version, app_stage, app_author, app_description,
 
     # prepare the logger
     logger = logging.getLogger(app_name)
-    setup_logging(arguments, app_name, app_version, app_stage)
+    setup_logging(args=arguments, app_name=app_name,
+                  app_version=app_version, app_stage=app_stage,
+                  log_for_console=log_for_console)
 
     logger.debug("config file is at %s", arguments.config_file)
 

@@ -21,7 +21,8 @@ except AttributeError:
         return type(x).__name__ == 'SRE_Pattern'
 
 
-def setup_logging(args, app_name, app_version, app_stage=''):
+def setup_logging(args, app_name, app_version, app_stage='',
+                  log_for_console=False):
     """
     Prepares our logging mechanism.
 
@@ -38,6 +39,9 @@ def setup_logging(args, app_name, app_version, app_stage=''):
             The version of the application.
         app_stage:
             Can be dev for development versions or empty for release versions.
+        log_for_console:
+            Use a format for stream handler that looks nicer in interactive
+            terminals.
 
     Returns:
         True if all went well, False to exit with error
@@ -59,10 +63,15 @@ def setup_logging(args, app_name, app_version, app_stage=''):
     args.log_level = log_level
 
     # The format we're going to use with console output.
-    fmt = logging.Formatter(
-        "[%(asctime)s] [%(levelname)-7s] [%(name)-19s] [%(threadName)-15s] "
-        "[%(funcName)-25s] %(message)s",
-        '%M:%S')
+    if log_for_console:
+        fmt = logging.Formatter(
+            "%(levelname)s: %(message)s",
+            '%M:%S')
+    else:
+        fmt = logging.Formatter(
+            "[%(asctime)s] [%(levelname)-7s] [%(name)-19s] [%(threadName)-15s] "
+            "[%(funcName)-25s] %(message)s",
+            '%M:%S')
 
     # This is the console output.
     console_handler = logging.StreamHandler()
