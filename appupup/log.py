@@ -107,37 +107,113 @@ class DebugLogger(logging.StreamHandler):
     Logging handler that allows extended filtering of the output.
 
     One place where you can use this is in a overrides.py that
-    is not commited to source control and is loaded by the application
+    is not comited to source control and is loaded by the application
     at startup.
+
+    There are three types of checks for properties of the message:
+
+    * *include*: if the pattern is matched the message will be isued \
+      without any other checks. These are checked first.
+    * *exclude*: if the pattern is matched the message will NOT be isued \
+      and no other checks will be performed. These are checked second.
+    * *callback*: if the pattern is matched the callback is called \
+      and can decide if it handles the message or not. These are checked last. \
+      The callback receives `DebugLogger` as first argument, the \
+      formatted message as the second, the value that was \
+      matched as the third and the record as fourth. \
+      It should call either :meth:~`filtered_in` \
+      or :meth:~`filtered_out` if it returns `True`, otherwise it should \
+      call neither.
     """
     def __init__(self,
-                 name_pattern=None, thread_pattern=None,
-                 file_name_pattern=None, func_name_pattern=None,
-                 level_name_pattern=None, level_number_pattern=None,
-                 line_number_pattern=None, message_pattern=None,
-                 module_pattern=None, path_pattern=None,
-                 process_pattern=None,
-                 created_interval=None, relative_created_interval=None,
-                 level_in=None):
+                 include_name_pattern=None, include_thread_pattern=None,
+                 include_file_name_pattern=None, include_func_name_pattern=None,
+                 include_level_name_pattern=None, include_level_number_pattern=None,
+                 include_line_number_pattern=None, include_message_pattern=None,
+                 include_module_pattern=None, include_path_pattern=None,
+                 include_process_pattern=None,
+                 include_created_interval=None, include_relative_created_interval=None,
+                 include_level_in=None,
+                 exclude_name_pattern=None, exclude_thread_pattern=None,
+                 exclude_file_name_pattern=None, exclude_func_name_pattern=None,
+                 exclude_level_name_pattern=None, exclude_level_number_pattern=None,
+                 exclude_line_number_pattern=None, exclude_message_pattern=None,
+                 exclude_module_pattern=None, exclude_path_pattern=None,
+                 exclude_process_pattern=None,
+                 exclude_created_interval=None, exclude_relative_created_interval=None,
+                 exclude_level_in=None,
+                 callback_name_pattern=None, callback_thread_pattern=None,
+                 callback_file_name_pattern=None, callback_func_name_pattern=None,
+                 callback_level_name_pattern=None, callback_level_number_pattern=None,
+                 callback_line_number_pattern=None, callback_message_pattern=None,
+                 callback_module_pattern=None, callback_path_pattern=None,
+                 callback_process_pattern=None,
+                 callback_created_interval=None, callback_relative_created_interval=None,
+                 callback_level_in=None,
+                 ):
 
-        self.name_pattern = name_pattern
-        self.thread_pattern = thread_pattern
-        self.file_name_pattern = file_name_pattern
-        self.func_name_pattern = func_name_pattern
-        self.level_name_pattern = level_name_pattern
-        self.level_number_pattern = level_number_pattern
-        self.level_in = level_in
-        self.line_number_pattern = line_number_pattern
-        self.message_pattern = message_pattern
-        self.module_pattern = module_pattern
-        self.path_pattern = path_pattern
-        self.process_pattern = process_pattern
-        self.created_interval = created_interval
-        self.relative_created_interval = relative_created_interval
+        self.include_name_pattern = include_name_pattern
+        self.include_thread_pattern = include_thread_pattern
+        self.include_file_name_pattern = include_file_name_pattern
+        self.include_func_name_pattern = include_func_name_pattern
+        self.include_level_name_pattern = include_level_name_pattern
+        self.include_level_number_pattern = include_level_number_pattern
+        self.include_level_in = include_level_in
+        self.include_line_number_pattern = include_line_number_pattern
+        self.include_message_pattern = include_message_pattern
+        self.include_module_pattern = include_module_pattern
+        self.include_path_pattern = include_path_pattern
+        self.include_process_pattern = include_process_pattern
+        self.include_created_interval = include_created_interval
+        self.include_relative_created_interval = include_relative_created_interval
+
+        self.exclude_name_pattern = exclude_name_pattern
+        self.exclude_thread_pattern = exclude_thread_pattern
+        self.exclude_file_name_pattern = exclude_file_name_pattern
+        self.exclude_func_name_pattern = exclude_func_name_pattern
+        self.exclude_level_name_pattern = exclude_level_name_pattern
+        self.exclude_level_number_pattern = exclude_level_number_pattern
+        self.exclude_level_in = exclude_level_in
+        self.exclude_line_number_pattern = exclude_line_number_pattern
+        self.exclude_message_pattern = exclude_message_pattern
+        self.exclude_module_pattern = exclude_module_pattern
+        self.exclude_path_pattern = exclude_path_pattern
+        self.exclude_process_pattern = exclude_process_pattern
+        self.exclude_created_interval = exclude_created_interval
+        self.exclude_relative_created_interval = exclude_relative_created_interval
+
+        self.callback_name_pattern = callback_name_pattern
+        self.callback_thread_pattern = callback_thread_pattern
+        self.callback_file_name_pattern = callback_file_name_pattern
+        self.callback_func_name_pattern = callback_func_name_pattern
+        self.callback_level_name_pattern = callback_level_name_pattern
+        self.callback_level_number_pattern = callback_level_number_pattern
+        self.callback_level_in = callback_level_in
+        self.callback_line_number_pattern = callback_line_number_pattern
+        self.callback_message_pattern = callback_message_pattern
+        self.callback_module_pattern = callback_module_pattern
+        self.callback_path_pattern = callback_path_pattern
+        self.callback_process_pattern = callback_process_pattern
+        self.callback_created_interval = callback_created_interval
+        self.callback_relative_created_interval = callback_relative_created_interval
 
         logging.StreamHandler.__init__(self)
 
-    def check_one(self, pattern, value):
+    def filter_callback(self, pattern, msg, value, record):
+        """ Checks if a value matches the pattern. """
+        if pattern is None:
+            return True
+        pattern, callback = pattern
+
+        if is_pattern_object(pattern):
+            if pattern.match(str(value)):
+                return callback(self, msg, value, record)
+        else:
+            if str(pattern) == str(value):
+                return callback(self, msg, value, record)
+        return True
+
+    def filter_include(self, pattern, value):
         """ Checks if a value matches the pattern. """
         if pattern is None:
             return True
@@ -146,12 +222,51 @@ class DebugLogger(logging.StreamHandler):
         else:
             return str(pattern) == str(value)
 
-    def check_interval(self, interval, value):
+    def filter_exclude(self, pattern, value):
+        """ Checks if a value matches the pattern. """
+        if pattern is None:
+            return False
+        elif is_pattern_object(pattern):
+            return pattern.match(str(value))
+        else:
+            return str(pattern) == str(value)
+
+    def check_interval_callback(self, interval, msg, value, record, include=True):
+        """ Checks if a value is inside a given interval (inclusive). """
+        if interval is None:
+            return True
+
+        interval, callback = interval
+        if include:
+            if (value >= interval[0]) and (value <= interval[1]):
+                return callback(self, value, record)
+
+        else:
+            if (value < interval[0]) or (value > interval[1]):
+                return callback(self, msg, value, record)
+
+        return True
+
+    def check_interval(self, interval, value, include=True):
         """ Checks if a value is inside a given interval (inclusive). """
         if interval is None:
             return True
         else:
-            return (value >= interval[0]) and (value <= interval[0])
+            if include:
+                return (value >= interval[0]) and (value <= interval[1])
+            else:
+                return (value < interval[0]) or (value > interval[1])
+
+    def check_in_callback(self, acceptable, msg, value, record):
+        """ Checks if a value is inside a given interval (inclusive). """
+        if acceptable is None:
+            return True
+
+        acceptable, callback = acceptable
+        if value in acceptable:
+            return callback(self, msg, value, record)
+
+        return True
 
     def check_in(self, acceptable, value):
         """ Checks if a value is inside a given interval (inclusive). """
@@ -172,34 +287,93 @@ class DebugLogger(logging.StreamHandler):
         """ Reimplemented method to filter messages. """
         msg = self.format(record)
         while True:
-            if not self.check_one(self.thread_pattern, record.threadName):
+            if self.filter_exclude(self.exclude_thread_pattern, record.threadName):
                 break
-            if not self.check_one(self.name_pattern, record.name):
+            if self.filter_exclude(self.exclude_name_pattern, record.name):
                 break
-            if not self.check_one(self.file_name_pattern, record.filename):
+            if self.filter_exclude(self.exclude_file_name_pattern, record.filename):
                 break
-            if not self.check_one(self.func_name_pattern, record.funcName):
+            if self.filter_exclude(self.exclude_func_name_pattern, record.funcName):
                 break
-            if not self.check_one(self.level_name_pattern, record.levelname):
+            if self.filter_exclude(self.exclude_level_name_pattern, record.levelname):
                 break
-            if not self.check_one(self.level_number_pattern, record.levelno):
+            if self.filter_exclude(self.exclude_level_number_pattern, record.levelno):
                 break
-            if not self.check_one(self.line_number_pattern, record.lineno):
+            if self.filter_exclude(self.exclude_line_number_pattern, record.lineno):
                 break
-            if not self.check_one(self.message_pattern, record.message):
+            if self.filter_exclude(self.exclude_message_pattern, record.message):
                 break
-            if not self.check_one(self.module_pattern, record.module):
+            if self.filter_exclude(self.exclude_module_pattern, record.module):
                 break
-            if not self.check_one(self.path_pattern, record.pathname):
+            if self.filter_exclude(self.exclude_path_pattern, record.pathname):
                 break
-            if not self.check_one(self.process_pattern, record.processName):
+            if self.filter_exclude(self.exclude_process_pattern, record.processName):
                 break
-            if not self.check_interval(self.created_interval, record.created):
+            if not self.check_interval(self.exclude_created_interval, record.created):
                 break
-            if not self.check_interval(self.relative_created_interval, record.relativeCreated):
+            if not self.check_interval(self.exclude_relative_created_interval, record.relativeCreated):
                 break
-            if not self.check_in(self.level_in, record.levelno):
+            if not self.check_in(self.exclude_level_in, record.levelno):
                 break
+
+            if not self.filter_include(self.include_thread_pattern, record.threadName):
+                break
+            if not self.filter_include(self.include_name_pattern, record.name):
+                break
+            if not self.filter_include(self.include_file_name_pattern, record.filename):
+                break
+            if not self.filter_include(self.include_func_name_pattern, record.funcName):
+                break
+            if not self.filter_include(self.include_level_name_pattern, record.levelname):
+                break
+            if not self.filter_include(self.include_level_number_pattern, record.levelno):
+                break
+            if not self.filter_include(self.include_line_number_pattern, record.lineno):
+                break
+            if not self.filter_include(self.include_message_pattern, record.message):
+                break
+            if not self.filter_include(self.include_module_pattern, record.module):
+                break
+            if not self.filter_include(self.include_path_pattern, record.pathname):
+                break
+            if not self.filter_include(self.include_process_pattern, record.processName):
+                break
+            if not self.check_interval(self.include_created_interval, record.created):
+                break
+            if not self.check_interval(self.include_relative_created_interval, record.relativeCreated):
+                break
+            if not self.check_in(self.include_level_in, record.levelno):
+                break
+
+
+            if not self.filter_callback(self.callback_thread_pattern, msg, record.threadName, record):
+                return
+            if not self.filter_callback(self.callback_name_pattern, msg, record.name, record):
+                return
+            if not self.filter_callback(self.callback_file_name_pattern, msg, record.filename, record):
+                return
+            if not self.filter_callback(self.callback_func_name_pattern, msg, record.funcName, record):
+                return
+            if not self.filter_callback(self.callback_level_name_pattern, msg, record.levelname, record):
+                return
+            if not self.filter_callback(self.callback_level_number_pattern, msg, record.levelno, record):
+                return
+            if not self.filter_callback(self.callback_line_number_pattern, msg, record.lineno, record):
+                return
+            if not self.filter_callback(self.callback_message_pattern, msg, record.message, record):
+                return
+            if not self.filter_callback(self.callback_module_pattern, msg, record.module, record):
+                return
+            if not self.filter_callback(self.callback_path_pattern, msg, record.pathname, record):
+                return
+            if not self.filter_callback(self.callback_process_pattern, msg, record.processName, record):
+                return
+            if not self.check_interval_callback(self.callback_created_interval, msg, record.created, record):
+                return
+            if not self.check_interval_callback(self.callback_relative_created_interval, msg, record.relativeCreated, record):
+                return
+            if not self.check_in_callback(self.callback_level_in, msg, record.levelno, record):
+                return
 
             self.filtered_in(msg, record)
             return
